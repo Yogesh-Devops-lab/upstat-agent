@@ -83,7 +83,8 @@ def get_container_logs(container_id, container_name):
     cmd.append(container_id)
     
     try:
-        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
+        print(f"Querying logs for container: {container_name} ({container_id[:12]})...")
+        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True, timeout=5)
         new_last_ts = last_ts
         
         for line in out.splitlines():
@@ -113,6 +114,8 @@ def get_container_logs(container_id, container_name):
         if new_last_ts:
             state[container_id] = new_last_ts
             
+    except subprocess.TimeoutExpired as e:
+        print(f"Timeout getting logs for container {container_name}: {e}")
     except Exception as e:
         print(f"Error getting logs for container {container_name}: {e}")
         
