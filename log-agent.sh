@@ -120,7 +120,7 @@ def get_container_logs(container_id, container_name):
     if last_ts:
         cmd.extend(["--since", last_ts])
     else:
-        cmd.extend(["--since", "10s"])
+        cmd.extend(["--since", "1h"])
         
     cmd.append(container_id)
     
