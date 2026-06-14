@@ -156,7 +156,7 @@ def get_container_logs(container_id, container_name):
             state[container_id] = new_last_ts
             
     except Exception as e:
-        pass
+        print(f"Error getting logs for container {container_name}: {e}")
         
     return logs
 
