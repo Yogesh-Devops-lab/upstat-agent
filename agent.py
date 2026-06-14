@@ -165,7 +165,9 @@ def main():
             batch.extend(get_container_logs(c["id"], c["name"]))
             
         if batch:
-            send_logs(batch)
+            chunk_size = 500
+            for i in range(0, len(batch), chunk_size):
+                send_logs(batch[i:i + chunk_size])
             save_state()
             
         time.sleep(5)
