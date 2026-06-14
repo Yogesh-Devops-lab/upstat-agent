@@ -58,6 +58,7 @@ def detect_level(message):
 
 def get_docker_containers():
     containers = []
+    excluded_names = {"loki", "grafana", "promtail", "prometheus", "node-exporter", "upstat-log-agent"}
     try:
         out = subprocess.check_output(["docker", "ps", "--format", "{{.ID}}\t{{.Names}}"], text=True)
         for line in out.strip().split("\n"):
@@ -65,7 +66,9 @@ def get_docker_containers():
                 continue
             parts = line.split("\t")
             if len(parts) == 2:
-                containers.append({"id": parts[0], "name": parts[1]})
+                c_id, c_name = parts[0], parts[1]
+                if c_name not in excluded_names:
+                    containers.append({"id": c_id, "name": c_name})
     except Exception as e:
         print("Error listing docker containers:", e)
     return containers
