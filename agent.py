@@ -1,6 +1,3 @@
-import urllib.request
-import urllib.parse
-import urllib.error
 import json
 import time
 import os
@@ -128,27 +125,31 @@ def send_logs(logs):
     payload = {"logs": logs}
     url = f"{BACKEND_URL}/api/logs/ingest"
     
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {API_KEY}",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-    
     try:
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers=headers,
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=10) as response:
-            pass
-    except urllib.error.HTTPError as e:
-        print(f"Error sending logs to backend: HTTP Error {e.code} {e.reason}")
-        try:
-            print("Response body:", e.read().decode())
-        except Exception as read_err:
-            print("Could not read response body:", read_err)
+        cmd = [
+            "curl",
+            "-s",
+            "-w", "\n%{http_code}",
+            "-X", "POST",
+            "-H", "Content-Type: application/json",
+            "-H", f"Authorization: Bearer {API_KEY}",
+            "-d", "@-",
+            url
+        ]
+        res = subprocess.run(cmd, input=json.dumps(payload), capture_output=True, text=True, timeout=15)
+        if res.returncode != 0:
+            print("Error executing curl to send logs:", res.stderr)
+            return
+            
+        parts = res.stdout.rsplit("\n", 1)
+        if len(parts) == 2:
+            body, http_code = parts
+            http_code = http_code.strip()
+            if http_code not in ("200", "201", "204"):
+                print(f"Error sending logs to backend: HTTP Error {http_code}")
+                print("Response body:", body)
+        else:
+            print("Error parsing curl response:", res.stdout)
     except Exception as e:
         print("Error sending logs to backend:", e)
 
